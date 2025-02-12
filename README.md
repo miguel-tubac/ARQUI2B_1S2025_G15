@@ -1,6 +1,6 @@
 GRUPO NUMERO 15
 
-Integrantes:
+
 
 Miguel Adrian Tubac Agustin	202101927
 
