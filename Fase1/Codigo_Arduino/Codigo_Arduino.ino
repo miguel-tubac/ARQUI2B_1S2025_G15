@@ -4,6 +4,8 @@ const int maxima = 5000;
 const int minima = 100;
 const int aumenta = 100;
 int serial=0;
+float sensibilidad = 0.185; //Ajuste de sensibilidad para sensor de 5A(sensor de corriente)
+float corriente= 0.0;
 
 void setup() {
   Serial.begin(9600);
@@ -18,14 +20,19 @@ void setup() {
 }
 
 void loop() {
-  gasVal=analogRead(A0);
-  //Serial.print("gas> ");
-  Serial.print(gasVal);
+  //Este es la parte del sensor de oxigeno
+  int sensorValue = analogRead(A0);
+  float voltage = sensorValue * (5.0 / 1023.0);
+  gasVal = voltage * 200; // Conversión aproximada para CO2
+  Serial.print(gasVal);// Se imprime en la consola el valor en ppm
+
+  //Esta es la parte del sensor de corriente
+  corriente = promedioCorriente(500); //Esto me calcula el promedio de 500 mediciones del sensor de corriente
+  Serial.print(",");
+  Serial.print(corriente);
   
-  //Serial.print("vel> ");
   Serial.print(",");
   Serial.println(velocidad);
-  //Serial.print("\t");
   
   delay(velocidad);
 }
@@ -49,4 +56,18 @@ void delayMas()
 
 void saludoFunc(){
   Serial.println("ISR18 :3 :3 :3 CAMBIO");
+}
+
+
+
+//Funcion para promediar el valor de la corriente
+float promedioCorriente(int muestra){
+  float sensorA1;
+  float intencidad=0;
+  for(int i=0;i<muestra;i++){
+    sensorA1 = analogRead(A1) * (5.0/1023.0);//Leemos el sensor de corriente
+    intencidad=intencidad+(sensorA1-2.5)/sensibilidad; //Este es el caclculo para obtener el valor de consumo
+  }
+  intencidad=intencidad/muestra;
+  return intencidad;
 }
