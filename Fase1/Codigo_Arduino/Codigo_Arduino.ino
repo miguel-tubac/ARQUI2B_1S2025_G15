@@ -6,6 +6,9 @@ const int aumenta = 100;
 int serial=0;
 float sensibilidad = 0.185; //Ajuste de sensibilidad para sensor de 5A(sensor de corriente)
 float corriente= 0.0;
+int sensor = A2;
+int lectura;
+
 
 // Incluimos librería
 #include <DHT.h>
@@ -14,9 +17,18 @@ float corriente= 0.0;
 #define DHTPIN 4
 // Dependiendo del tipo de sensor
 #define DHTTYPE DHT11
- 
 // Inicializamos el sensor DHT11
 DHT dht(DHTPIN, DHTTYPE);
+
+
+
+// incluir libreria
+#include <Wire.h>
+// Pines sensor izquierdo
+int Trigger_izq = 11;
+int Echo_izq = 10;
+
+int izquierdo_duracion, izquierdo_distancia;
  
 
 void setup() {
@@ -26,9 +38,14 @@ void setup() {
   pinMode(3, INPUT_PULLUP);
   pinMode(21, INPUT_PULLUP);
 
-  attachInterrupt(digitalPinToInterrupt(3), delayMas, FALLING); // Cambio a FALLING
-  attachInterrupt(digitalPinToInterrupt(2), delayMenos, RISING); // Cambio a FALLING
-  attachInterrupt(digitalPinToInterrupt(21), saludoFunc, FALLING);
+  //attachInterrupt(digitalPinToInterrupt(3), delayMas, FALLING); // Cambio a FALLING
+  //attachInterrupt(digitalPinToInterrupt(2), delayMenos, RISING); // Cambio a FALLING
+  //attachInterrupt(digitalPinToInterrupt(21), saludoFunc, FALLING);
+
+  // Se declaran los pines sensor izquierdo como Entradas/Salidas
+  pinMode(Trigger_izq, OUTPUT);
+  pinMode(Echo_izq, INPUT);
+  
 
   // Comenzamos el sensor DHT
   dht.begin();
@@ -66,12 +83,23 @@ void loop() {
   Serial.print(h);
   //Serial.print("Temperatura: ");
   Serial.print(",");
-  Serial.println(t);
+  Serial.print(t);
 
   
-  //Serial.print(",");
-  //Serial.println(velocidad);
+  /// Variables Para medir distancia con sensor izquierdo
+  digitalWrite(Trigger_izq, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(Trigger_izq, LOW);
+  izquierdo_duracion = pulseIn(Echo_izq, HIGH);
+  izquierdo_distancia = (izquierdo_duracion/2) / 29.1;
+  Serial.print(",");
+  Serial.print(izquierdo_distancia);
   
+  
+  lectura = analogRead(sensor);
+  Serial.print(",");
+  Serial.println(lectura);
+
   delay(1000);
 }
 

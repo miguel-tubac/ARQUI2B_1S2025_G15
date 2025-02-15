@@ -55,15 +55,15 @@ void draw() {
     humedad = 0;
   }*/
   
-  distancia_mov += 1;
+  /*distancia_mov += 1;
   if(distancia_mov > 120){
     distancia_mov = -20;
-  }
+  }*/
   
-  luz += 1;
+  /*luz += 1;
   if(luz>100){
     luz = 0;
-  }
+  }*/
   
   //gasVal += 1;
   //if(gasVal > 1500){
@@ -674,12 +674,13 @@ void serialEvent(Serial p) {
   if (data != null) {
     data = trim(data);
     String[] values = split(data, ","); 
-    if (values.length == 4) { 
+    if (values.length == 6) { 
       gasVal = int(values[0]); 
       corrienteVal = float(values[1]);
       humedad = float(values[2]);
       temperatura = float(values[3]);
-      //velocidad = int(values[2]);
+      distancia_mov = int(values[4]);
+      luz = int(values[5]);
     }
   }
 }
