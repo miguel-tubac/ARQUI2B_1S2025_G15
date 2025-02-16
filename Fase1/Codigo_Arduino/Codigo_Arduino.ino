@@ -69,5 +69,8 @@ float promedioCorriente(int muestra){
     intencidad=intencidad+(sensorA1-2.5)/sensibilidad; //Este es el caclculo para obtener el valor de consumo
   }
   intencidad=intencidad/muestra;
+  if(intencidad < 0){
+    intencidad = -1*intencidad;
+  }
   return intencidad;
 }
