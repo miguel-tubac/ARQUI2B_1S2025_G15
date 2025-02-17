@@ -118,8 +118,8 @@ void infromacion_SensorCorriente(){
   int centerY = y_corriente + 145;
   int radio = 120;
   float minCO2 = 0.0;
-  float maxCO2 = 5.0;
-  float angle = map(corrienteVal, minCO2, maxCO2, -135, 135);
+  float maxCO2 = 1.0;
+  float angle = map(corrienteVal*5, minCO2, maxCO2, -135, 135);
 
   for (int i = -135; i <= 135; i++) {
     float lerpFactor = map(i, -135, 135, 0, 1);
@@ -141,8 +141,8 @@ void infromacion_SensorCorriente(){
   noStroke();
   ellipse(centerX, centerY, 10, 10);
 
-  String calidad = corrienteVal < 3.0 ? "NORMAL" : corrienteVal < 4.0 ? "PRECAUCIÓN" : "ALTA";
-  color textColor = corrienteVal < 3.0 ? color(0, 180, 0) : corrienteVal < 4.0 ? color(255, 165, 0) : color(255, 0, 0);
+  String calidad = corrienteVal < 0.4 ? "NORMAL" : corrienteVal < 0.7 ? "PRECAUCIÓN" : "ALTA";
+  color textColor = corrienteVal < 0.4 ? color(0, 180, 0) : corrienteVal < 0.7 ? color(255, 165, 0) : color(255, 0, 0);
   
   stroke(0);  // Color negro para la orilla
   strokeWeight(6);  // Grosor del borde
@@ -184,7 +184,7 @@ void informacion_SensorCo2(){
   int centerY = y_aire + 145;
   int radio = 120;
   int minCO2 = 0;
-  int maxCO2 = 1500;
+  int maxCO2 = 1000;
   float angle = map(gasVal, minCO2, maxCO2, -135, 135);
 
   for (int i = -135; i <= 135; i++) {
@@ -207,8 +207,8 @@ void informacion_SensorCo2(){
   noStroke(); 
   ellipse(centerX, centerY, 10, 10);
 
-  String calidad = gasVal < 750 ? "BUENA" : gasVal < 1200 ? "PRECAUCIÓN" : "MALA";
-  color textColor = gasVal < 750 ? color(0, 180, 0) : gasVal < 1200 ? color(255, 165, 0) : color(255, 0, 0);
+  String calidad = gasVal < 400 ? "BUENA" : gasVal < 600 ? "PRECAUCIÓN" : "MALA";
+  color textColor = gasVal < 400 ? color(0, 180, 0) : gasVal < 600 ? color(255, 165, 0) : color(255, 0, 0);
   
   stroke(0);  // Color negro para la orilla
   strokeWeight(6);  // Grosor del borde

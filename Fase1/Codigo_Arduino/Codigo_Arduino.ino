@@ -150,19 +150,19 @@ void loop() {
   }
 
 
-  if(t >= 30){
+  if(t >= 30){ // led aviso temperatura
     digitalWrite(pin_rojo, HIGH);
   }else{
     digitalWrite(pin_rojo, LOW);
   }
 
-  if(h > 60){
+  if(h > 60){ // led aviso humedad
     digitalWrite(pin_azul, HIGH);
   }else{
     digitalWrite(pin_azul, LOW);
   }
 
-  if(corriente > 0.30){
+  if(corriente > 0.40){ // led aviso corriente
     digitalWrite(pin_amarillo, HIGH);
   }else{
     digitalWrite(pin_amarillo, LOW);
