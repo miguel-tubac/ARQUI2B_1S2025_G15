@@ -19,6 +19,8 @@ int lectura;
 #define DHTTYPE DHT11
 // Inicializamos el sensor DHT11
 DHT dht(DHTPIN, DHTTYPE);
+float h; 
+float t;
 
 
 
@@ -29,18 +31,38 @@ int Trigger_izq = 11;
 int Echo_izq = 10;
 
 int izquierdo_duracion, izquierdo_distancia;
- 
+
+
+//Parte de la lcd
+#include <LiquidCrystal_I2C.h>
+#include <Wire.h>
+LiquidCrystal_I2C lcd(0x27,16,2);
+
+//Para los botones
+volatile bool botonPresionado1 = false;
+volatile bool botonPresionado2 = false;
+volatile bool botonPresionado3 = false;
+
+//Para guardar los datos en la Eprom
+#include <EEPROM.h>
+float tem_eeprom = 0.0;
+float hum_eeprom = 0.0;
+float corr_eeprom = 0.0;
+int gas_eeprom = 0;
+int luz_eepro = 0;
+
+
 
 void setup() {
   Serial.begin(9600);
 
   pinMode(2, INPUT_PULLUP);  // Activa resistencia pull-up interna
   pinMode(3, INPUT_PULLUP);
-  pinMode(21, INPUT_PULLUP);
+  pinMode(18, INPUT_PULLUP);
 
-  //attachInterrupt(digitalPinToInterrupt(3), delayMas, FALLING); // Cambio a FALLING
-  //attachInterrupt(digitalPinToInterrupt(2), delayMenos, RISING); // Cambio a FALLING
-  //attachInterrupt(digitalPinToInterrupt(21), saludoFunc, FALLING);
+  attachInterrupt(digitalPinToInterrupt(3), setFlag3, FALLING); // Cambio a FALLING
+  attachInterrupt(digitalPinToInterrupt(2), setFlag2, RISING); // Cambio a FALLING
+  attachInterrupt(digitalPinToInterrupt(18), setFlag1, FALLING);
 
   // Se declaran los pines sensor izquierdo como Entradas/Salidas
   pinMode(Trigger_izq, OUTPUT);
@@ -49,6 +71,9 @@ void setup() {
 
   // Comenzamos el sensor DHT
   dht.begin();
+
+  lcd.init();
+  lcd.backlight();
 }
 
 void loop() {
@@ -65,9 +90,9 @@ void loop() {
 
 
   // Leemos la humedad relativa
-  float h = dht.readHumidity();
+  h = dht.readHumidity();
   // Leemos la temperatura en grados centígrados (por defecto)
-  float t = dht.readTemperature();
+  t = dht.readTemperature();
  
   // Comprobamos si ha habido algún error en la lectura
   if (isnan(h) || isnan(t)) {
@@ -100,28 +125,74 @@ void loop() {
   Serial.print(",");
   Serial.println(lectura);
 
+  if (botonPresionado2) {
+    botonPresionado2 = false; 
+    escribir_Eprom();  
+  }
+
+  if (botonPresionado3) {
+    botonPresionado3 = false; 
+    leer_Eprom();  
+  }
+
+  if (botonPresionado1) {
+    botonPresionado1 = false; 
+    mostrar_datos();  
+  }
+
+  
+
   delay(1000);
 }
 
 
-// ISR pin 2, disminuye la velocidad
-void delayMenos()
-{
-  velocidad = velocidad - aumenta;
-  if (velocidad < minima) velocidad = minima;
-  Serial.println("ISR2 MENOS FLANCO UP");
-}
- 
-// ISR pin 3, aumenta la velocidad
-void delayMas()
-{
-  velocidad = velocidad + aumenta;
-  if (velocidad > maxima) velocidad = maxima;
-  Serial.println("ISR3 MAS BAJADA");
+// ISR pin 2, guardar datos en la eprom
+void setFlag2() {
+  botonPresionado2 = true;  // ISR solo cambia la bandera
 }
 
-void saludoFunc(){
-  Serial.println("ISR18 :3 :3 :3 CAMBIO");
+void escribir_Eprom(){
+  EEPROM.put(0, t);  
+  EEPROM.put(5, h); 
+  EEPROM.put(10, corriente);
+  EEPROM.put(15, gasVal);
+  EEPROM.put(20, lectura);
+  Serial.println(".......Datos guardados......");
+}
+
+ 
+// ISR pin 3, obtiene los valores de la Eprom
+void setFlag3() {
+  botonPresionado3 = true;  // ISR solo cambia la bandera
+}
+
+void leer_Eprom(){
+  EEPROM.get(0, tem_eeprom);
+  EEPROM.get(5, hum_eeprom);
+  EEPROM.get(10, corr_eeprom);
+  EEPROM.get(15, gas_eeprom);
+  EEPROM.get(20, luz_eepro);
+  Serial.println(".......Datos obtenidos......");
+}
+
+
+//En esta parte se carga el mesaje a la lcd
+void setFlag1() {
+  botonPresionado1 = true;  // ISR solo cambia la bandera
+}
+
+void mostrar_datos(){
+  lcd.setCursor(0,0);
+  lcd.print("T:");
+  lcd.print(String(tem_eeprom));
+  lcd.print("C");
+  lcd.print(",H:");
+  lcd.print(String(hum_eeprom));
+  lcd.setCursor(0,1);
+  lcd.print("Aire: ");
+  lcd.print(String(gas_eeprom));
+  lcd.print(" ppm");
+  Serial.println("....Mostrando datos........");
 }
 
 

@@ -221,7 +221,7 @@ void informacion_SensorCo2(){
   myFont = createFont("Arial-Bold", 20); // Cargar la fuente Arial con tamaño 32
   textFont(myFont); // Aplicar la fuente
   fill(0);
-  text(gasVal + "  rpm", x_aire + 50, y_aire + 153); // titulo
+  text(gasVal + "  ppm", x_aire + 50, y_aire + 153); // titulo
   
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -242,11 +242,13 @@ void espacio_luz(){
   //--------------------------------------------------------------------
   // definir el colr po el sensor de luz
   int aux_luz = int(luz);
+  aux_luz = 100 - aux_luz;
   int r = 55 + aux_luz*2;
   int g = 55 + aux_luz*2;
   int b = aux_luz;
   noStroke(); // Quita el contorno
   fill(r, g, b); // fondo del luz
+  
   rect(x_luz + 145 , y_luz + 52, 25 + aux_luz*4, 39, 90); // Esquinas redondeadas con radio de 20px
   
   // titulo ------------------------------------------------------------
@@ -258,7 +260,8 @@ void espacio_luz(){
   myFont = createFont("Arial-Bold", 20); // Cargar la fuente Arial con tamaño 32
   textFont(myFont); // Aplicar la fuente
   fill(0);
-  String tex_luz = str(luz);
+  
+  String tex_luz = str(100 - luz);
   text(tex_luz + " %", x_luz + 430, y_luz + 31); // titulo
  
   //--------------------------------------------------------------------
@@ -427,7 +430,7 @@ void texto_lineas_temperatura(){
 }
 
 void texto_temperatura(){
-  String tex_temperatura = str(temperatura);
+  String tex_temperatura = str(temperatura/2);
   //------------------------------------------------------------------------------------
   myFont = createFont("Arial-Bold", 18); // Cargar la fuente Arial con tamaño
   textFont(myFont); // Aplicar la fuente
@@ -678,9 +681,9 @@ void serialEvent(Serial p) {
       gasVal = int(values[0]); 
       corrienteVal = float(values[1]);
       humedad = float(values[2]);
-      temperatura = float(values[3]);
+      temperatura = 2*(float(values[3]));
       distancia_mov = int(values[4]);
-      luz = int(values[5]);
+      luz = int(int(values[5])/15);
     }
   }
 }
