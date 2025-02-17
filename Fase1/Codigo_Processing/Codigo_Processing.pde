@@ -26,6 +26,7 @@ int x_mov = 430; // posicion inicial del esapcio de la sensor de moviento en x
 int y_mov = 100; // posicion inicial del esapcio de la sensor de movientoen y
 int rang_senso = 50; 
 
+
 int x_aire = 740;
 int y_aire = 10;
 int gasVal = 0; //--// Valor local en lugar de lectura desde Arduino rango 0 - 1500
@@ -75,6 +76,8 @@ void draw() {
   //if (corrienteVal > 5) {
     //  corrienteVal = 0.00;
   //}
+  
+  
   
   texto_titulo();
   espacio_termometro();
@@ -619,7 +622,7 @@ void sensor_movimiento(){
   
   //
   if((distancia_mov > 0) && (distancia_mov <= 100)){
-    int aux_distancia = int(distancia_mov)*2;
+    int aux_distancia = int(distancia_mov)*10;
     noStroke(); // Elimina el borde
     fill(0, 255, 50); // Color azul
     ellipse(x_mov + 150, y_mov + 305- aux_distancia, 20, 20); // rango 200
@@ -684,6 +687,12 @@ void serialEvent(Serial p) {
       temperatura = 2*(float(values[3]));
       distancia_mov = int(values[4]);
       luz = int(int(values[5])/15);
+      
+      if (distancia_mov >= 19){
+        distancia_mov = 0;
+      }else{
+       numero_personas ++; 
+      }
     }
   }
 }

@@ -51,6 +51,10 @@ float corr_eeprom = 0.0;
 int gas_eeprom = 0;
 int luz_eepro = 0;
 
+//Pines de las luces led de advertencia
+int pin_azul = 26;
+int pin_amarillo = 27;
+int pin_rojo = 28;
 
 
 void setup() {
@@ -74,6 +78,11 @@ void setup() {
 
   lcd.init();
   lcd.backlight();
+
+  //Declaracion de pines led
+  pinMode(pin_azul, OUTPUT);
+  pinMode(pin_amarillo, OUTPUT);
+  pinMode(pin_rojo, OUTPUT);
 }
 
 void loop() {
@@ -140,6 +149,24 @@ void loop() {
     mostrar_datos();  
   }
 
+
+  if(t >= 30){
+    digitalWrite(pin_rojo, HIGH);
+  }else{
+    digitalWrite(pin_rojo, LOW);
+  }
+
+  if(h > 60){
+    digitalWrite(pin_azul, HIGH);
+  }else{
+    digitalWrite(pin_azul, LOW);
+  }
+
+  if(corriente > 0.30){
+    digitalWrite(pin_amarillo, HIGH);
+  }else{
+    digitalWrite(pin_amarillo, LOW);
+  }
   
 
   delay(1000);
@@ -158,6 +185,11 @@ void escribir_Eprom(){
   EEPROM.put(15, gasVal);
   EEPROM.put(20, lectura);
   Serial.println(".......Datos guardados......");
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Guardando datos");
+  delay(1500);
+  lcd.clear();
 }
 
  
@@ -173,6 +205,11 @@ void leer_Eprom(){
   EEPROM.get(15, gas_eeprom);
   EEPROM.get(20, luz_eepro);
   Serial.println(".......Datos obtenidos......");
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Obteniendo datos");
+  delay(1500);
+  lcd.clear();
 }
 
 
@@ -182,6 +219,7 @@ void setFlag1() {
 }
 
 void mostrar_datos(){
+  lcd.clear();
   lcd.setCursor(0,0);
   lcd.print("T:");
   lcd.print(String(tem_eeprom));
