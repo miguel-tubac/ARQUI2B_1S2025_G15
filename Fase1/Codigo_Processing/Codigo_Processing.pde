@@ -22,6 +22,7 @@ int y_hume = 100; // posicion inicial del esapcio de la humedad en y
 
 float distancia_mov = -20;  // definir de 0 a 100 
 int numero_personas = 0; // matener en un rango de 4 digitos 
+boolean fuera_del_sensor = true;
 int x_mov = 430; // posicion inicial del esapcio de la sensor de moviento en x
 int y_mov = 100; // posicion inicial del esapcio de la sensor de movientoen y
 int rang_senso = 50; 
@@ -101,7 +102,7 @@ void texto_titulo(){
   myFont = createFont("Arial-Bold", 32); // Cargar la fuente Arial con tamaño 32
   textFont(myFont); // Aplicar la fuente
   fill(0);
-  text("HOLA MUNDO ", x_titulo + 200, y_titulo + 50); // titulo
+  text(" Monitoreo Ambiental", x_titulo + 200, y_titulo + 50); // titulo
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -688,10 +689,13 @@ void serialEvent(Serial p) {
       distancia_mov = int(values[4]);
       luz = int(int(values[5])/15);
       
+      if(fuera_del_sensor && distancia_mov < 19 ){
+        fuera_del_sensor = false;
+        numero_personas ++;
+      }
       if (distancia_mov >= 19){
         distancia_mov = 0;
-      }else{
-       numero_personas ++; 
+        fuera_del_sensor = true;
       }
     }
   }
