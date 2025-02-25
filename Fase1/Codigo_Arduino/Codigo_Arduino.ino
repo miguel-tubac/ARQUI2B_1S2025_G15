@@ -168,6 +168,7 @@ void loop() {
     digitalWrite(pin_amarillo, LOW);
   }
   
+  loop_lcd();
 
   delay(1000);
 }
@@ -188,7 +189,7 @@ void escribir_Eprom(){
   lcd.clear();
   lcd.setCursor(0,0);
   lcd.print("Guardando datos");
-  delay(1500);
+  delay(2000);
   lcd.clear();
 }
 
@@ -208,7 +209,7 @@ void leer_Eprom(){
   lcd.clear();
   lcd.setCursor(0,0);
   lcd.print("Obteniendo datos");
-  delay(1500);
+  delay(2000);
   lcd.clear();
 }
 
@@ -231,6 +232,32 @@ void mostrar_datos(){
   lcd.print(String(gas_eeprom));
   lcd.print(" ppm");
   Serial.println("....Mostrando datos........");
+  delay(3000);
+}
+
+void loop_lcd(){
+  /*EEPROM.put(0, t);  
+  EEPROM.put(5, h); 
+  EEPROM.put(10, corriente);
+  EEPROM.put(15, gasVal);
+  EEPROM.put(20, lectura);
+  Serial.println(".......Datos guardados......");
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Guardando datos");
+  delay(1500);
+  lcd.clear();*/
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("T:");
+  lcd.print(String(t));
+  lcd.print("C");
+  lcd.print(",H:");
+  lcd.print(String(h));
+  lcd.setCursor(0,1);
+  lcd.print("Aire: ");
+  lcd.print(String(gasVal));
+  lcd.print(" ppm");
 }
 
 
