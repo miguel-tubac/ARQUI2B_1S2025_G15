@@ -1,8 +1,9 @@
 //--------------------------Pines fase 2 --------------------------------------
-#define VEN_CO2_PIN 43      // pin ventilador co2 
-#define VEN_HUM_PIN 40       // pin ventilador humedad
-#define VEN_TEMP_PIN 42      // pin venitlador DC tempreatura 
-#define BUZZ_VOLT_PIN 41    // pin buzzer consumo de energia
+#define VEN_HUM_PIN 53       // pin ventilador humedad
+#define VEN_TEMP_PIN 51      // pin venitlador DC tempreatura 
+#define VEN_CO2_PIN 45      // pin ventilador co2 
+#define BUZZER_PIN 5  // Pin donde está conectado el buzzer
+
 ///--------------------------------------
 
 int gasVal;
@@ -20,9 +21,11 @@ int personas = 0;
 //-------------------- variabeles fase2 -------------------
 float co2_minimo = 0;           // valor minimo para el sensor Co2 (ventilador)
 float humedad_minima = 30;       // valor minimo para la humedad (ventilador)
-float temperatura_minima = 0;   // valor minimo para la temperatura (ventilador DC)
+float temperatura_minima = 40;   // valor minimo para la temperatura (ventilador DC)
 float energia_minima = 0;       // valor minimo para el consumo de enrgia (Buezzer)
+bool buzzerActivo = false;  // Variable para activar/desactivar el buzze
 
+//---------------------------------------------------------
 
 // Incluimos librería
 #include <DHT.h>
@@ -74,6 +77,13 @@ int pin_rojo = 28;
 void setup() {
   Serial.begin(9600);
 
+  // ------------------------------------------------------
+  pinMode(VEN_CO2_PIN, OUTPUT);
+  pinMode(VEN_HUM_PIN, OUTPUT);
+  pinMode(VEN_TEMP_PIN, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+
+  // ------------------------------------------------------
   pinMode(2, INPUT_PULLUP);  // Activa resistencia pull-up interna
   pinMode(3, INPUT_PULLUP);
   pinMode(18, INPUT_PULLUP);
@@ -176,13 +186,40 @@ void loop() {
     digitalWrite(pin_azul, LOW);
   }
 
-  digitalWrite(VEN_HUM_PIN, HIGH);
-
   if(corriente > 0.10){ // led aviso corriente
     digitalWrite(pin_amarillo, HIGH);
   }else{
     digitalWrite(pin_amarillo, LOW);
   }
+
+  //--------------------------------------------------------------------------------------------
+  if (t >= temperatura_minima) {
+      digitalWrite(VEN_TEMP_PIN, HIGH);  // Encender ventilador si temperatura alta
+  } else {
+      digitalWrite(VEN_TEMP_PIN, LOW);
+  }
+
+  if (h >= humedad_minima) {
+      digitalWrite(VEN_HUM_PIN, HIGH);  // Encender ventilador si humedad alta
+  } else {
+      digitalWrite(VEN_HUM_PIN, LOW);
+  }
+
+  if (gasVal >= co2_minimo) {
+      digitalWrite(VEN_CO2_PIN, HIGH);  // Encender ventilador si CO2 alto
+  } else {
+      digitalWrite(VEN_CO2_PIN, LOW);
+  }
+
+  if (buzzerActivo) {
+      digitalWrite(BUZZER_PIN, LOW);  // pin desactivado ---> buzzer encendido
+  } else {
+      digitalWrite(BUZZER_PIN, HIGH);  // pin activado ---> buzzer apagado 
+  }  
+
+  //---------------------------------------------------------------------------
+
+  
   
   loop_lcd();
 
