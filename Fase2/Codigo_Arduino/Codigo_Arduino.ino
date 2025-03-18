@@ -13,9 +13,9 @@
 
 
 //--------------------------Pines fase 2 --------------------------------------
-#define VEN_HUM_PIN 44       // pin ventilador humedad
-#define VEN_TEMP_PIN 42      // pin venitlador DC tempreatura 
-#define VEN_CO2_PIN 40      // pin ventilador co2 
+#define VEN_HUM_PIN 42       // pin ventilador humedad
+#define VEN_TEMP_PIN 43      // pin venitlador DC tempreatura 
+#define VEN_CO2_PIN 41      // pin ventilador co2 
 #define BUZZER_PIN 5  // Pin donde está conectado el buzzer
 
 ///--------------------------------------
@@ -31,16 +31,20 @@ float corriente= 0.0;
 int sensor = A2;
 int lectura;
 int personas = 0;
+// ------------------------------------------
+unsigned long tiempo = 0; // dice johnataon que es para archivos grandes 
+
 
 //-------------------- variabeles fase2 -------------------
 
 String json;
 StaticJsonDocument<300> doc;
 
-float co2_minimo = 35;           // valor minimo para el sensor Co2 (ventilador)
-float humedad_minima = 59;       // valor minimo para la humedad (ventilador)
+float co2_minimo = 200;           // valor minimo para el sensor Co2 (ventilador)
+float humedad_minima = 60;       // valor minimo para la humedad (ventilador)
 float temperatura_minima = 30;   // valor minimo para la temperatura (ventilador DC)
-float energia_minima = 0.5;       // valor minimo para el consumo de enrgia (Buezzer)
+float energia_minima = 0.15;       // valor minimo para el consumo de enrgia (Buezzer)
+float energia_maxima = 0.40;       // valor minimo para el consumo de enrgia (Buezzer)
 bool buzzerActivo = false;  // Variable para activar/desactivar el buzze
 
 MFRC522 rfid(SS_PIN, RST_PIN);
@@ -55,7 +59,7 @@ byte uid_tamano = 4;  // Tamaño del UID
 Servo servoMotor;
 int angulo = 0;
 
-
+int lucesLed = A3;
 //---------------------------------------------------------
 
 // Incluimos librería
@@ -104,9 +108,9 @@ int gas_eeprom = 0;
 int luz_eepro = 0;
 
 //Pines de las luces led de advertencia
-int pin_azul = 26;
+int pin_azul = 28;
 int pin_amarillo = 27;
-int pin_rojo = 28;
+int pin_rojo = 26;
 
 
 void setup() {
@@ -199,6 +203,11 @@ void loop() {
   //---------------Esto lee el valor de la fotoresistencia
   lectura = analogRead(sensor);
 
+  //---------------Esto coloca la cantidad de luz en los leds
+  int valorPWM = map(lectura, 0, 1023, 0, 255);  // Escala 10-bit a 8-bit
+  analogWrite(lucesLed, valorPWM);  // Escribe la señal PWM en el pin 46
+
+
 
   //---------------Estos son los Botones de Aviso
   if (botonPresionado2) {
@@ -230,7 +239,7 @@ void loop() {
     digitalWrite(pin_azul, LOW);
   }
 
-  if(corriente > energia_minima){ // led aviso corriente
+  if(corriente > energia_maxima || corriente < energia_minima){ // led aviso corriente
     digitalWrite(pin_amarillo, HIGH);
   }else{
     digitalWrite(pin_amarillo, LOW);
@@ -245,6 +254,8 @@ void loop() {
 
   if (h >= humedad_minima) {
       digitalWrite(VEN_HUM_PIN, HIGH);  // Encender ventilador si humedad alta
+      
+      digitalWrite(VEN_HUM_PIN, HIGH);  // Encender ventilador si humedad alta
   } else {
       digitalWrite(VEN_HUM_PIN, LOW);
   }
@@ -255,7 +266,7 @@ void loop() {
       digitalWrite(VEN_CO2_PIN, LOW);
   }
 
-  if (buzzerActivo) {
+  if (corriente > energia_maxima || corriente < energia_minima) {
       digitalWrite(BUZZER_PIN, LOW);  // pin desactivado ---> buzzer encendido
   } else {
       digitalWrite(BUZZER_PIN, HIGH);  // pin activado ---> buzzer apagado 
@@ -276,14 +287,64 @@ void loop() {
   //Primero validamos que se encuantre alguien en la puerta
   if(izquierdo_distancia2 < 7){
     //Segundo validamos que la tarjeta sea reconocida
+    //  ----------------------
     if (!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial()) {
-        return;
+        return;  // Si no hay tarjeta, salir de loop()
     }
-    //Si se reconoce la tarjeta se abre la puerta
-    angulo = 130;
-    servoMotor.write(angulo); // Mover el servo al ángulo actual
-    //Aymewntamos en uno a las personas
-    personas +=1;
+
+    Serial.print("Tarjeta detectada! UID: ");
+    bool coincide1 = true;
+    bool coincide2 = true;
+
+    // Leer y mostrar el UID detectado
+    for (byte i = 0; i < rfid.uid.size; i++) {
+        Serial.print(rfid.uid.uidByte[i] < 0x10 ? "0" : "");
+        Serial.print(rfid.uid.uidByte[i], HEX);
+        Serial.print(" ");
+
+        // Comparar con UID 1
+        if (i >= uid_tamano || rfid.uid.uidByte[i] != uid_autorizado1[i]) {
+            coincide1 = false;
+        }
+
+        // Comparar con UID 2
+        if (i >= uid_tamano || rfid.uid.uidByte[i] != uid_autorizado2[i]) {
+            coincide2 = false;
+        }
+    }
+    Serial.println();
+
+    // Verificar cuál tarjeta es
+    if (coincide1) {
+        //Serial.println("✅ Acceso autorizado: Tarjeta 1.");
+        angulo = 130;
+        servoMotor.write(angulo); // Mover el servo al ángulo actual
+        //Aymewntamos en uno a las personas
+        personas +=1;
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Acceso Exitoso");
+        delay(1000);
+    } else if (coincide2) {
+       // Serial.println("✅ Acceso autorizado: Tarjeta 2.");
+       angulo = 130;
+        servoMotor.write(angulo); // Mover el servo al ángulo actual
+        //Aymewntamos en uno a las personas
+        personas +=1;
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Acceso Exitoso");
+        delay(1000);
+    } else {
+       // Serial.println("❌ Acceso denegado. Tarjeta no reconocida.");
+       lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Acceso Denegado");
+        delay(1000);
+    }
+
+    rfid.PICC_HaltA();
+    rfid.PCD_StopCrypto1();
   }
 
   rfid.PICC_HaltA();
@@ -410,6 +471,12 @@ void GenerateJson(){
   doc["corriente"] = corriente;
 
   serializeJson(doc, json);
-  Serial.println(json);
+  if (tiempo == 0) {
+    Serial.println(json);
+    tiempo = millis();
+  } else if (millis() - tiempo >= 5000) {
+    tiempo = millis();
+    Serial.println(json);
+  }
   delay(500);
 }
