@@ -1,0 +1,20 @@
+#include <Servo.h>
+
+Servo servoMotor;
+int angulo = 0;
+int incremento = 1; // Velocidad del movimiento
+
+void setup() {
+    servoMotor.attach(9); // Conectar el servo al pin 9
+}
+
+void loop() {
+    servoMotor.write(angulo); // Mover el servo al ángulo actual
+    angulo += incremento;
+
+    if (angulo >= 130 || angulo <= 0) {
+        incremento = -incremento; // Cambiar dirección
+    }
+
+    delay(20); // Ajusta la velocidad de oscilación
+}
