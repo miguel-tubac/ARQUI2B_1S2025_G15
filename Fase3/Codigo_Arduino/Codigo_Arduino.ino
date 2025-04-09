@@ -41,7 +41,7 @@ String json;
 StaticJsonDocument<300> doc;
 
 float co2_minimo = 200;           // valor minimo para el sensor Co2 (ventilador)
-float humedad_minima = 60;       // valor minimo para la humedad (ventilador)
+float humedad_minima = 10;       // valor minimo para la humedad (ventilador)
 float temperatura_minima = 30;   // valor minimo para la temperatura (ventilador DC)
 float energia_minima = 0.15;       // valor minimo para el consumo de enrgia (Buezzer)
 float energia_maxima = 0.40;       // valor minimo para el consumo de enrgia (Buezzer)
@@ -113,6 +113,10 @@ int pin_amarillo = 27;
 int pin_rojo = 26;
 
 
+//Esto es para la iluminacion desde el frontend
+//bool swichLed = true;
+int pinSwichLed = 22;
+
 void setup() {
   Serial.begin(9600);
   //En el Mega, Serial1 usa los pines 18 (TX1) y 19 (RX1).
@@ -158,6 +162,9 @@ void setup() {
 
   servoMotor.attach(6); // Conectar el servo al pin 9
   servoMotor.write(0);
+
+  //Para el pin de switch
+  pinMode(pinSwichLed, INPUT);
 }
 
 void loop() {
@@ -202,12 +209,21 @@ void loop() {
   }
 
 
-  //---------------Esto lee el valor de la fotoresistencia
-  lectura = analogRead(sensor);
-
-  //---------------Esto coloca la cantidad de luz en los leds
-  int valorPWM = map(lectura, 0, 1023, 0, 255);  // Escala 10-bit a 8-bit
-  analogWrite(lucesLed, valorPWM);  // Escribe la señal PWM en el pin 46
+  // Obtenemos el estado del pin (HIGH o LOW)
+  int estado = digitalRead(pinSwichLed);
+  Serial.println(estado);
+  if (estado == HIGH) {
+    //---------------Esto lee el valor de la fotoresistencia
+    lectura = analogRead(sensor);
+    Serial.println(lectura);
+    //---------------Esto coloca la cantidad de luz en los leds
+    int valorPWM = map(lectura, 0, 1023, 0, 255);  // Escala 10-bit a 8-bit
+    analogWrite(lucesLed, valorPWM);  // Escribe la señal PWM en el pin 46
+    Serial.println(valorPWM);
+  } else{
+    analogWrite(lucesLed, 0);
+  }
+  
 
 
 
@@ -491,11 +507,11 @@ void EnviarDatos() {
   String mensaje = String(t) + "," + String(h) + "," + String(gasVal) + "," + String(lectura) + "," + String(personas) + "," + String(corriente);
   
   // Mostrarlo por el monitor serial
-  // Serial.println("Enviando datos al ESP32 por Serial3:");
-  // Serial.println(mensaje);
+  Serial.println("Enviando datos al ESP32 por Serial3:");
+  Serial.println(mensaje);
   
   // Enviar el mensaje por Serial3 (TX3)
   Serial3.println(mensaje);
   
-  delay(5000);
+  delay(3000);
 }

@@ -3,7 +3,7 @@
 #include <HardwareSerial.h>
 
 //Esto es para usar los pines rx y tx
-HardwareSerial SerialESP(1); // Usaremos UART2 (puedes usar 1 también)
+HardwareSerial SerialESP(2); // Usaremos UART2 (puedes usar 1 también)
 
 // Usamos UART1: RX=16 (entrada), TX no se usa
 //HardwareSerial SerialMega(1);
@@ -46,26 +46,24 @@ void wifiInit() {
   }
 
 void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Mensaje recibido [");
-  Serial.print(topic);
-  Serial.print("] ");
+  // Solo procesamos el payload si tiene contenido
+  if (length > 0) {
+    Serial.print("Mensaje recibido [");
+    Serial.print(topic);
+    Serial.print("] ");
 
-  char payload_string[length + 1];
-  
-  int resultI;
+    char payload_string[length + 1];
+    memcpy(payload_string, payload, length);
+    payload_string[length] = '\0';
 
-  memcpy(payload_string, payload, length);
-  payload_string[length] = '\0';
-  resultI = atoi(payload_string);
-  
-  var = resultI;
+    int resultI = atoi(payload_string);
+    var = resultI;
 
-  resultS = "";
-  
-  for (int i=0;i<length;i++) {
-    resultS= resultS + (char)payload[i];
+    Serial.print("Interpretado como entero: ");
+    Serial.println(var);
+  } else {
+    Serial.println("No se recibió payload (vacío)");
   }
-  Serial.println();
 }
 
 
@@ -83,9 +81,9 @@ void reconnect() {
     } else {
       Serial.print("Fallo, rc=");
       Serial.print(mqttClient.state());
-      Serial.println(" intentar de nuevo en 5 segundos");
+      Serial.println(" intentar de nuevo en 1 segundos");
       // Wait 5 seconds before retrying
-      delay(5000);
+      delay(1000);
     }
   }
 }
@@ -99,8 +97,9 @@ void setup(){
   mqttClient.setServer(server, port);
 
   //Esto para recibir los datos del Arduino Mega, tomar que se tomo UART2
-  SerialESP.begin(9600, SERIAL_8N1, 17, 16); // RX=17, TX=16 (ajusta si usas otros pines)
+  SerialESP.begin(9600, SERIAL_8N1, 4, -1); // RX=17, TX=16 (ajusta si usas otros pines)
 }
+
 
 unsigned long previousMillis = 0;
 const long interval = 9000;
@@ -112,11 +111,9 @@ void loop(){
   }
   mqttClient.loop();
 
-  // bool validacion = SerialESP.available();
 
-  // Serial.println(validacion);
   //Aca se obtien los datos del Arduino mega mediante uart es decir rx y tx
-  if (SerialESP.available()) {
+  if (SerialESP.available() > 0) {
     String datos = SerialESP.readStringUntil('\n');  // Leer línea completa
     Serial.println("Datos recibidos: " + datos);
 
@@ -138,12 +135,12 @@ void loop(){
     // Convertir strings a números
     if (index == 6) {
       // Mostrar resultados
-      Serial.println("Temperatura: " + partes[0]);
-      Serial.println("Humedad: " + partes[1]);
-      Serial.println("Gas: " + partes[2]);
-      Serial.println("Iluminación: " + partes[3]);
-      Serial.println("Personas: " + partes[4]);
-      Serial.println("Corriente: " + partes[5]);
+      // Serial.println("Temperatura: " + partes[0]);
+      // Serial.println("Humedad: " + partes[1]);
+      // Serial.println("Gas: " + partes[2]);
+      // Serial.println("Iluminación: " + partes[3]);
+      // Serial.println("Personas: " + partes[4]);
+      // Serial.println("Corriente: " + partes[5]);
 
       //Estos datos se tendrian que enviar al MQTTX
       mqttClient.publish("sensor/temperatura", partes[0].c_str());
@@ -156,11 +153,16 @@ void loop(){
   }
 
 
+  
+
   if (var == 0) {
     digitalWrite(ledpin, LOW);
   } else if (var == 1) {
+    // Serial.print("Led: ");
+    // Serial.println(var);
     digitalWrite(ledpin, HIGH);
   }
+  
 
   //Aca se envian datos al MQTTX, se envia el valor de una foto resistecia como prueba
   unsigned long currentMillis = millis();
@@ -171,7 +173,6 @@ void loop(){
     //Esto es para encender un led solo es prueva de un topico
     Serial.print("Led: ");
     Serial.println(var);
-
-    
+  
   }
 }
