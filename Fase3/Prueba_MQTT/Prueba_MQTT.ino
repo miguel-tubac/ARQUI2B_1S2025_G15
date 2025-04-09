@@ -3,14 +3,19 @@
 #include <HardwareSerial.h>
 
 //Esto es para usar los pines rx y tx
-HardwareSerial SerialESP(2); // Usaremos UART2 (puedes usar 1 también)
+HardwareSerial SerialESP(1); // Usaremos UART2 (puedes usar 1 también)
+
+// Usamos UART1: RX=16 (entrada), TX no se usa
+//HardwareSerial SerialMega(1);
 
 WiFiClient esp32Client;
 PubSubClient mqttClient(esp32Client);
 
 //Son las credenciales de nuestra red 
-const char* ssid     = "Galaxy A30s7840";
-const char* password = "1234mike";
+// const char* ssid     = "Galaxy A30s7840";
+// const char* password = "1234mike";
+const char* ssid     = "SIN_CONEXION01";
+const char* password = "chepetepresta";
 
 //Credenciales del broker gratuito
 char *server = "broker.emqx.io";
@@ -107,6 +112,9 @@ void loop(){
   }
   mqttClient.loop();
 
+  // bool validacion = SerialESP.available();
+
+  // Serial.println(validacion);
   //Aca se obtien los datos del Arduino mega mediante uart es decir rx y tx
   if (SerialESP.available()) {
     String datos = SerialESP.readStringUntil('\n');  // Leer línea completa
@@ -130,20 +138,20 @@ void loop(){
     // Convertir strings a números
     if (index == 6) {
       // Mostrar resultados
-      // Serial.println("Temperatura: " + partes[0]);
-      // Serial.println("Humedad: " + partes[1]);
-      // Serial.println("Gas: " + partes[2]);
-      // Serial.println("Iluminación: " + partes[3]);
-      // Serial.println("Personas: " + partes[4]);
-      // Serial.println("Corriente: " + partes[5]);
+      Serial.println("Temperatura: " + partes[0]);
+      Serial.println("Humedad: " + partes[1]);
+      Serial.println("Gas: " + partes[2]);
+      Serial.println("Iluminación: " + partes[3]);
+      Serial.println("Personas: " + partes[4]);
+      Serial.println("Corriente: " + partes[5]);
 
       //Estos datos se tendrian que enviar al MQTTX
-      // mqttClient.publish("sensor/temperatura", partes[0].c_str());
-      // mqttClient.publish("sensor/humedad", partes[1].c_str());
-      // mqttClient.publish("sensor/gas", partes[2].c_str());
-      // mqttClient.publish("sensor/luz", partes[3].c_str());
-      // mqttClient.publish("sensor/personas", partes[4].c_str());
-      // mqttClient.publish("sensor/corriente", partes[5].c_str());
+      mqttClient.publish("sensor/temperatura", partes[0].c_str());
+      mqttClient.publish("sensor/humedad", partes[1].c_str());
+      mqttClient.publish("sensor/gas", partes[2].c_str());
+      mqttClient.publish("sensor/luz", partes[3].c_str());
+      mqttClient.publish("sensor/personas", partes[4].c_str());
+      mqttClient.publish("sensor/corriente", partes[5].c_str());
     }
   }
 
@@ -164,20 +172,6 @@ void loop(){
     Serial.print("Led: ");
     Serial.println(var);
 
-    // Datos de prueba quemados (hardcoded)
-    String temp = "25.3";
-    String humedad = "60.2";
-    String gas = "300";
-    String luz = "512";
-    String personas = "2";
-    String corriente = "0.25";
-
-    // Publicar los datos quemados a sus respectivos topics
-    mqttClient.publish("sensor/temperatura", temp.c_str());
-    mqttClient.publish("sensor/humedad", humedad.c_str());
-    mqttClient.publish("sensor/gas", gas.c_str());
-    mqttClient.publish("sensor/luz", luz.c_str());
-    mqttClient.publish("sensor/personas", personas.c_str());
-    mqttClient.publish("sensor/corriente", corriente.c_str());
+    
   }
 }

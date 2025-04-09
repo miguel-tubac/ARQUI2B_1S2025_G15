@@ -116,7 +116,7 @@ int pin_rojo = 26;
 void setup() {
   Serial.begin(9600);
   //En el Mega, Serial1 usa los pines 18 (TX1) y 19 (RX1).
-  Serial1.begin(9600);      // Comunicación hacia el ESP32 (TX1/RX1)
+  Serial3.begin(9600);      // Comunicación hacia el ESP32 (TX1/RX1)
 
   // ------------------------------------------------------
   pinMode(VEN_CO2_PIN, OUTPUT);
@@ -416,7 +416,7 @@ void mostrar_datos(){
   lcd.print("Aire: ");
   lcd.print(String(gas_eeprom));
   lcd.print(" ppm");
-  Serial.println("....Mostrando datos........");
+  //Serial.println("....Mostrando datos........");
   delay(2000);
 }
 
@@ -485,9 +485,17 @@ void GenerateJson(){
 }
 
 
-//Esta funcion envia los datos al controlador ESP32 por el puerto serial1
-void EnviarDatos(){
-  //Orden de los datos: temperatura, humedad, xigeno, iluminacion, personas, corriente
-  Serial1.println(String(t) + "," + String(h)+ "," + String(gasVal)+ "," + String(lectura)+ "," + String(personas)+ "," + String(corriente));
-  delay(1000);
+// Esta función envía los datos al controlador ESP32 por el puerto Serial3 (TX3 = pin 14)
+void EnviarDatos() {
+  // Crear el mensaje con los datos
+  String mensaje = String(t) + "," + String(h) + "," + String(gasVal) + "," + String(lectura) + "," + String(personas) + "," + String(corriente);
+  
+  // Mostrarlo por el monitor serial
+  // Serial.println("Enviando datos al ESP32 por Serial3:");
+  // Serial.println(mensaje);
+  
+  // Enviar el mensaje por Serial3 (TX3)
+  Serial3.println(mensaje);
+  
+  delay(5000);
 }
