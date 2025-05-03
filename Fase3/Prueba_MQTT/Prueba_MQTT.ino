@@ -24,7 +24,11 @@ int port = 1883;
 //Pines de prueba
 int ledpin= 11;
 
+//Pines para el servo
+int servopin= 2;
+
 int var = 0;
+int var2 = 0;
 int ledval = 0;
 char datos[40];
 String resultS = "";
@@ -52,15 +56,28 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print(topic);
     Serial.print("] ");
 
-    char payload_string[length + 1];
-    memcpy(payload_string, payload, length);
-    payload_string[length] = '\0';
+    if (strcmp(topic, "Entrada/01")) == 0{
+      char payload_string[length + 1];
+      memcpy(payload_string, payload, length);
+      payload_string[length] = '\0';
 
-    int resultI = atoi(payload_string);
-    var = resultI;
+      int resultI = atoi(payload_string);
+      var = resultI;
 
-    Serial.print("Interpretado como entero: ");
-    Serial.println(var);
+      Serial.print("Interpretado como entero: ");
+      Serial.println(var);
+    }else if(strcmp(topic, "Entrada/02")) == 0{
+      char payload_string[length + 1];
+      memcpy(payload_string, payload, length);
+      payload_string[length] = '\0';
+
+      int resultI = atoi(payload_string);
+      var2 = resultI;
+
+      Serial.print("Interpretado como entero: ");
+      Serial.println(var2);
+    }
+
   } else {
     Serial.println("No se recibió payload (vacío)");
   }
@@ -77,6 +94,7 @@ void reconnect() {
 
       //Se conecta a un Topico
       mqttClient.subscribe("Entrada/01");
+      mqttClient.subscribe("Entrada/02");
       Serial.println("Conectado");
     } else {
       Serial.print("Fallo, rc=");
@@ -161,6 +179,14 @@ void loop(){
     // Serial.print("Led: ");
     // Serial.println(var);
     digitalWrite(ledpin, HIGH);
+  }
+
+  if (var2 == 0) {
+    digitalWrite(servopin, LOW);
+  } else if (var2 == 1) {
+    // Serial.print("Led: ");
+    // Serial.println(var);
+    digitalWrite(servopin, HIGH);
   }
   
 

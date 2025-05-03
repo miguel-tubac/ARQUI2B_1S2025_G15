@@ -2,9 +2,35 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const { connectDatabase } = require("./dbConnection");
-const { SerialPort } = require("serialport");
-const { ReadlineParser } = require("@serialport/parser-readline");
+const mqtt = require("mqtt");
 const axios = require("axios"); // Añadir axios para hacer peticiones HTTP
+const app = express();
+const port = 3000;
+// Middleware
+app.use(bodyParser.json());
+app.use(cors());
+
+// MQTT CONFIG
+const mqttClient = mqtt.connect("mqtt://broker.emqx.io:1883");
+
+let latestSensorData = {
+  temperatura: null,
+  humedad: null,
+  Aire: null,
+  Iluminacion: null,
+  Personas: null,
+  corriente: null,
+};
+
+const topics = [
+  "sensor/temperatura",
+  "sensor/humedad",
+  "sensor/gas",
+  "sensor/luz",
+  "sensor/personas",
+  "sensor/corriente",
+];
+
 const {
   SensorTemperatura,
   SensorCalidadAire,
@@ -14,78 +40,122 @@ const {
   SensorHumedad,
 } = require("./sensorData");
 
-const app = express();
-const port = 3000;
+mqttClient.on("connect", () => {
+  console.log("Conectado al broker MQTT");
+  mqttClient.subscribe(topics, (err) => {
+    if (err) console.error("Error al suscribirse:", err);
+    else console.log("Suscrito a:", topics.join(", "));
+  });
+});
 
-// Middleware
-app.use(bodyParser.json());
-app.use(cors());
+mqttClient.on("message", (topic, message) => {
+  const value = parseFloat(message.toString());
+
+  switch (topic) {
+    case "sensor/temperatura":
+      latestSensorData.temperatura = value;
+      break;
+    case "sensor/humedad":
+      latestSensorData.humedad = value;
+      break;
+    case "sensor/gas":
+      latestSensorData.Aire = value;
+      break;
+    case "sensor/luz":
+      latestSensorData.Iluminacion = value;
+      break;
+    case "sensor/personas":
+      latestSensorData.Personas = value;
+      break;
+    case "sensor/corriente":
+      latestSensorData.corriente = value;
+      break;
+    default:
+      console.log(`❓ Topic desconocido: ${topic}`);
+      return;
+  }
+
+  console.log("📦 JSON actualizado:", JSON.stringify(latestSensorData));
+});
 
 // Conectar a la base de datos
+
 connectDatabase()
   .then(() => {
     console.log("Conexión a la base de datos establecida");
 
     // Configurar el puerto serial
-    const serialPort = new SerialPort({ path: "COM3", baudRate: 9600 }); // Cambia 'COM3' por el puerto correcto
-    const parser = serialPort.pipe(new ReadlineParser({ delimiter: "\n" }));
+    //const serialPort = new SerialPort({ path: "COM5", baudRate: 9600 }); // Cambia 'COM3' por el puerto correcto
+    //const parser = serialPort.pipe(new ReadlineParser({ delimiter: "\n" }));
 
-    parser.on("data", async (data) => {
-      console.log(`Datos recibidos: ${data}`);
+    mqttClient.on("message", async (topic, message) => {
       try {
-        const sensorData = JSON.parse(data);
-        const { temperatura, humedad, Aire, Iluminacion, Personas, corriente } =
-          sensorData;
-
+        const value = parseFloat(message.toString());
+        const decimales = contarDecimales(value);
+        if (decimales >= 3) {
+          return;
+        }
         // Enviar datos a la API
         const timestamp = new Date();
-        if (temperatura !== undefined) {
-          await axios.post("http://localhost:3000/api/sensor-data", {
-            table: "Sensor_temperatura",
-            value: temperatura,
-            timestamp,
-          });
-        }
-        if (Aire !== undefined) {
-          await axios.post("http://localhost:3000/api/sensor-data", {
-            table: "Sensor_calidadAire",
-            value: Aire,
-            timestamp,
-          });
-        }
-        if (Iluminacion !== undefined) {
-          await axios.post("http://localhost:3000/api/sensor-data", {
-            table: "Sensor_luz",
-            value: Iluminacion,
-            timestamp,
-          });
-        }
-        if (Personas !== undefined) {
-          await axios.post("http://localhost:3000/api/sensor-data", {
-            table: "Sensor_proximidad",
-            value: Personas,
-            timestamp,
-          });
-        }
-        if (humedad !== undefined) {
-          await axios.post("http://localhost:3000/api/sensor-data", {
-            table: "Sensor_humedad",
-            value: humedad,
-            timestamp,
-          });
-        }
-        if (corriente !== undefined) {
-          await axios.post("http://localhost:3000/api/sensor-data", {
-            table: "Sensor_voltaje",
-            value: corriente,
-            timestamp,
-          });
-        }
 
-        console.log("Datos del sensor enviados a la API");
+        switch (topic) {
+          case "sensor/temperatura":
+            await axios.post("http://localhost:3000/api/sensor-data", {
+              table: "Sensor_temperatura",
+              value: value,
+              timestamp,
+            });
+            //latestSensorData.temperatura = value;
+            break;
+          case "sensor/humedad":
+            await axios.post("http://localhost:3000/api/sensor-data", {
+              table: "Sensor_humedad",
+              value: value,
+              timestamp,
+            });
+            //latestSensorData.humedad = value;
+            break;
+          case "sensor/gas":
+            await axios.post("http://localhost:3000/api/sensor-data", {
+              table: "Sensor_calidadAire",
+              value: value,
+              timestamp,
+            });
+            //latestSensorData.Aire = value;
+            break;
+          case "sensor/luz":
+            await axios.post("http://localhost:3000/api/sensor-data", {
+              table: "Sensor_luz",
+              value: value,
+              timestamp,
+            });
+            //latestSensorData.Iluminacion = value;
+            break;
+          case "sensor/personas":
+            await axios.post("http://localhost:3000/api/sensor-data", {
+              table: "Sensor_proximidad",
+              value: value,
+              timestamp,
+            });
+            //latestSensorData.Personas = value;
+            break;
+          case "sensor/corriente":
+            await axios.post("http://localhost:3000/api/sensor-data", {
+              table: "Sensor_voltaje",
+              value: value,
+              timestamp,
+            });
+            //latestSensorData.corriente = value;
+            break;
+          default:
+            console.log(`❓ Topic desconocido: ${topic}`);
+            return;
+        }
       } catch (error) {
         console.error("Error al procesar los datos del sensor", error);
       }
+
+      console.log("📦 JSON actualizado:", JSON.stringify(latestSensorData));
     });
 
     // Ruta para guardar datos del sensor
@@ -132,3 +202,12 @@ connectDatabase()
   .catch((error) => {
     console.error("Error al conectar a la base de datos", error);
   });
+
+function contarDecimales(numero) {
+  if (Math.floor(numero) === numero) {
+    // Es un número entero, no tiene decimales
+    return 0;
+  }
+  const partes = numero.toString().split(".");
+  return partes[1]?.length || 0;
+}

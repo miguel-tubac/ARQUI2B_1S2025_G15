@@ -39,12 +39,11 @@ export const ChartComponent = ({ data, colors }) => {
 
   const options = {
     responsive: true,
+    animation: false, // ❗ Evita animación en cada actualización
     plugins: {
       legend: {
         position: 'top',
-        labels: {
-          color: textColor,
-        },
+        labels: { color: textColor },
       },
       title: {
         display: true,
@@ -53,18 +52,13 @@ export const ChartComponent = ({ data, colors }) => {
       },
     },
     scales: {
-      x: {
-        ticks: {
-          color: textColor,
-        },
-      },
-      y: {
-        ticks: {
-          color: textColor,
-        },
-      },
+      x: { ticks: { color: textColor } },
+      y: { ticks: { color: textColor } },
     },
   };
+  
+
+
 
   return <Line data={chartData} options={options} />;
 };

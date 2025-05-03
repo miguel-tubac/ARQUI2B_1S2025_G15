@@ -117,6 +117,9 @@ int pin_rojo = 26;
 //bool swichLed = true;
 int pinSwichLed = 22;
 
+//Este es el pin desde el fronted para validar el faceID
+int pinAbrirPuerta = 23;
+
 void setup() {
   Serial.begin(9600);
   //En el Mega, Serial1 usa los pines 18 (TX1) y 19 (RX1).
@@ -165,6 +168,8 @@ void setup() {
 
   //Para el pin de switch
   pinMode(pinSwichLed, INPUT);
+
+  pinMode(pinAbrirPuerta, INPUT);
 }
 
 void loop() {
@@ -294,6 +299,28 @@ void loop() {
   //--------------------Aca se genera el Json para mandar a la base de datos
   //GenerateJson();
   EnviarDatos();
+
+
+  //-------------------Esto es para abrir la puerta desde el frontedn
+  int estado2 = digitalRead(pinAbrirPuerta);
+  Serial.println(estado2);
+  if (estado2 == HIGH) {
+      //Serial.println("✅ Acceso autorizado: Tarjeta 1.");
+      angulo = 130;
+      servoMotor.write(angulo); // Mover el servo al ángulo actual
+      //Aymewntamos en uno a las personas
+      personas +=1;
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Acceso Exitoso");
+      delay(1000);
+  } else{
+      // Serial.println("❌ Acceso denegado. Tarjeta no reconocida.");
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Acceso Denegado");
+      delay(1000);
+  }
 
 
   //---------------------------------------------Este es el codigo de la tarjeta rci-------------------
